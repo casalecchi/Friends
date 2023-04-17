@@ -42,16 +42,13 @@ struct ContentView: View {
     func loadData() async {
         guard let url = URL(string: "https://www.hackingwithswift.com/samples/friendface.json") else { return }
         
-        if !users.isEmpty { return }
+        guard users.isEmpty else { return }
         
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
-            
-            if let decoded = try? decoder.decode([User].self, from: data) {
-                users = decoded
-            }
+            users = try decoder.decode([User].self, from: data)
         } catch {
             print("Error fetching the data: \(error.localizedDescription)")
         }
