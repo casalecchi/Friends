@@ -8,14 +8,53 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var users = [User]()
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+        NavigationView {
+            List(users) { user in
+                NavigationLink {
+                    Text(user.name)
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(user.name)
+                                .font(.headline)
+                            Text(user.company)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "circle.fill")
+                            .foregroundColor(user.isActive ? .green : .red)
+                    }
+                }
+            }
+            .navigationBarTitle("Connections")
+            .task {
+                await loadData()
+            }
         }
-        .padding()
+    }
+    
+    func loadData() async {
+        guard let url = URL(string: "https://www.hackingwithswift.com/samples/friendface.json") else { return }
+        
+        if !users.isEmpty { return }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            
+            if let decoded = try? decoder.decode([User].self, from: data) {
+                users = decoded
+            }
+        } catch {
+            print("Error fetching the data: \(error.localizedDescription)")
+        }
     }
 }
 
